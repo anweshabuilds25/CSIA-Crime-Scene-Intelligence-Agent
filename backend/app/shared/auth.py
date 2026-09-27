@@ -20,7 +20,7 @@ Requires:
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -41,8 +41,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Points FastAPI's docs/Swagger UI at the login endpoint that issues tokens.
 # Update the path if case_management/routes.py exposes login somewhere else.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-
+# bearer_scheme = HTTPBearer()
 
 # ---------------------------------------------------------------------------
 # Password hashing
@@ -92,14 +91,19 @@ def decode_access_token(token: str) -> dict:
 # Dependencies — import these in other modules' routes.py
 # ---------------------------------------------------------------------------
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+) -> dict:
     """
-    FastAPI dependency that extracts and validates the logged-in user from
-    the request's Authorization header.
+    Extract and validate the logged-in user from the Authorization header.
 
-    Returns a dict like: {"id": "...", "role": "investigator"}
+    Expected header:
+        Authorization: Bearer <JWT token>
     """
+    token = credentials.credentials
+
     payload = decode_access_token(token)
+
     user_id: str = payload.get("sub")
     role: str = payload.get("role", "investigator")
 
