@@ -1,0 +1,12 @@
+*.pt
+*.onnx
+*.engine
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/
+*.jpg
+*.png
+
+*.db

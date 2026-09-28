@@ -1,0 +1,8 @@
+{
+  "name": "CSIA - Crime Scene Intelligence Assistant",
+  "description": "Crime scene intelligence investigation platform with case management, chronological timeline construction, rule-based next steps, NLP entity extraction & relationship graphs, and image analysis.",
+  "version": "1.0.0",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

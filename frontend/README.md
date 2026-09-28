@@ -1,64 +1,272 @@
-# CSIA Frontend
+# CSIA — Crime Scene Intelligence Assistant
 
-React + Tailwind UI for the Crime Scene Investigation Assistant. Built to run
-standalone against mock data so you're never blocked waiting on a teammate's
-backend — flip one flag per module as each one ships.
+An AI-assisted case organization platform for forensic education, training, and mock investigations.
 
-## Run it
+> **CSIA assists. Humans decide.** Every AI output — object detections, statement summaries, next-step suggestions — is a prompt for human review, never an autonomous decision.
 
-```bash
-npm install
-npm run dev
+---
+
+## Table of Contents
+
+- [About](#about)
+- [Problem Statement](#problem-statement)
+- [Objectives](#objectives)
+- [System Architecture](#system-architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Setup & Running](#setup--running)
+- [API Reference](#api-reference)
+- [Testing](#testing)
+- [Team & Responsibilities](#team--responsibilities)
+- [Limitations & Disclaimer](#limitations--disclaimer)
+- [Academic Information](#academic-information)
+
+---
+
+## About
+
+CSIA brings scattered crime-scene evidence — photos, witness statements, CCTV frames — into a single case record, then applies AI to structure it:
+
+- Unified case dashboard
+- AI-assisted evidence analysis (object detection + OCR)
+- Witness statement summarization
+- Automatic, chronological timelines
+- Rule-based next-step suggestions
+- Exportable case reports
+- Case & evidence search
+
+It is built for **university demonstrations, forensic education, police training, and mock investigations** — not for live criminal casework.
+
+## Problem Statement
+
+A crime-scene photo, a witness statement, and a CCTV frame from the same case typically end up in separate files or folders, making it easy to miss a connection between them. CSIA pulls every evidence type into one case record and applies AI to surface structure and connections a manual review might miss.
+
+**Trade-off worth stating plainly:** centralizing everything also means a single breach or bug could expose an entire case.
+
+## Objectives
+
+| Objective | What it does |
+|---|---|
+| Unified Dashboard | Single view of every active case |
+| AI Evidence Analysis | Vision models scan uploaded images |
+| Statement Summarization | NLP condenses witness accounts |
+| Automatic Timelines | Events sequenced from evidence |
+| Next-Step Suggestions | Rule-based — e.g. *"check nearby CCTV"* |
+| Exportable Reports | Structured output for review |
+
+## System Architecture
+
+All modules run as **one FastAPI application, one process, one port** —
+mounted via `include_router()` in `backend/app/main.py`, sharing a single
+Postgres database through `case_management`'s schema. No module runs as a
+separate standalone service.
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React + Tailwind CSS |
+| Backend | FastAPI (Python) |
+| Computer Vision | YOLOv8 (Ultralytics) |
+| OCR | EasyOCR |
+| NLP | spaCy + Sentence Transformers |
+| Database | PostgreSQL |
+
+### Feasibility notes
+
+- **Budget:** fully open-source stack — student-friendly
+- **Performance:** YOLOv8 / EasyOCR run slowly without a GPU (CUDA recommended)
+- **Hosting:** a live/hosted version needs a real server, not a laptop
+- **Training data:** needs labeled examples the team may not legally have access to for real forensic imagery
+
+## Project Structure
+
+```text
+CSIA-Crime-Scene-Intelligence-Agent/
+│
+├── backend/
+│   │
+│   ├── app/
+│   │   ├── case_management/
+│   │   │   ├── API_REFERENCE.md
+│   │   │   ├── __init__.py
+│   │   │   ├── crud.py
+│   │   │   ├── database.py
+│   │   │   ├── models.py
+│   │   │   ├── requirements.txt
+│   │   │   ├── routes.py
+│   │   │   ├── sample_case.json
+│   │   │   └── schemas.py
+│   │   │
+│   │   ├── image_analysis/
+│   │   │   ├── ocr_reader.py
+│   │   │   ├── routes.py
+│   │   │   └── yolo_detector.py
+│   │   │
+│   │   ├── nlp_engine/
+│   │   │   ├── __init__.py
+│   │   │   ├── entity_extraction.py
+│   │   │   └── routes.py
+│   │   │
+│   │   ├── shared/
+│   │   │   ├── auth.py
+│   │   │   ├── exceptions.py
+│   │   │   └── utils.py
+│   │   │
+│   │   ├── timeline_suggestions/
+│   │   │   ├── next_step_rules.py
+│   │   │   ├── routes.py
+│   │   │   ├── test_full_flow.py
+│   │   │   ├── test_next_steps.py
+│   │   │   ├── test_timeline.py
+│   │   │   └── timeline_builder.py
+│   │   │
+│   │   ├── __init__.py
+│   │   └── main.py
+│   │
+│   ├── API_REFERENCE.md
+│   ├── requirements.txt
+│   ├── run.py
+│   └── sample_case.json
+│
+├── frontend/
+│   ├── src/
+│   │   ├── index.css
+│   │   └── main.jsx
+│   │
+│   ├── README.md
+│   ├── index.html
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   └── vite.config.js
+│
+├── ml_models/
+│   └── yolo/
+│
+├── evidence_analysis.py
+├── evidence_pipeline.py
+├── format_spec.py
+├── main.py
+├── report_builder.py
+├── routes.py
+├── storage.py
+│
+├── .gitignore
+├── LICENSE
+└── README.md
 ```
 
-Opens on http://localhost:5173.
+## Setup And Running
+### Prerequisites
+- Python 3.10+
+- Docker (for Postgres)
 
-## Wiring in real backend routes
+### 1. Start Postgres
+```bash
+docker run --name csia-db \
+  -e POSTGRES_USER=csia_user \
+  -e POSTGRES_PASSWORD=csia_password \
+  -e POSTGRES_DB=csia_db \
+  -p 5432:5432 \
+  -d postgres:16
+```
 
-Every backend call is isolated in `src/api/*.js`. Nothing else in the app
-talks to axios directly — components only ever import from `src/api/`.
+### 2. Install dependencies (from the repo root)
 
-1. Open `src/api/client.js` and set `MOCK_MODE = false`.
-2. Each file in `src/api/` (`cases.js`, `evidence.js`, `timeline.js`, `nlp.js`,
-   `search.js`, `report.js`) has a `if (MOCK_MODE) { ... }` branch and a real
-   `apiClient` call below it. Confirm the real path/payload shape against
-   whatever the teammate's `routes.py` actually implements, and adjust that
-   one function — the component using it doesn't need to change.
-3. `vite.config.js` proxies `/api` to `http://localhost:8000` — update the
-   `target` if the FastAPI backend runs elsewhere (e.g. via docker-compose).
+```bash
+pip install -r backend/app/case_management/requirements.txt
+pip install ultralytics easyocr opencv-python-headless torch
+```
 
-Mapping of file → owner, so you know who to check the contract with:
+### 3. Point the app at the database
 
-| api file        | owns it   | module                    |
-|------------------|-----------|---------------------------|
-| `cases.js`       | Yojit     | case_management           |
-| `search.js`      | Yojit     | case_management/search.py |
-| `evidence.js`    | Tanya     | evidence_upload           |
-| `report.js`      | Tanya     | report_generator          |
-| `timeline.js`    | Sanskruti | timeline_suggestions      |
-| `nlp.js`         | Anmol     | nlp_engine                |
-| `imageAnalysis.js` | Anwesha | image_analysis           |
+```bash
+export DATABASE_URL="postgresql://csia_user:csia_password@localhost:5432/csia_db"
+```
 
-`imageAnalysis.js` is now wired to Anwesha's real, confirmed `app.py`
-(`POST /analyze-evidence/`) — uploading an image in the Evidence tab
-automatically runs it through detection + OCR and shows the results inline.
+### 4. Run it
 
-## Known integration risks (worth raising with the team)
+```bash
+uvicorn backend.app.main:app --reload --port 8000
+```
 
-- **Anwesha's image_analysis service runs standalone.** Her `app.py` calls
-  `uvicorn.run()` itself instead of being mounted into `main.py` like the
-  other modules — so it's a separate process on its own port. The frontend
-  proxies `/image-api` to `localhost:8001` as a placeholder; confirm the
-  real port with her and update `vite.config.js`.
-- **Stack mismatch:** Sanskruti's `timeline_suggestions` uses Flask
-  (`Blueprint`), while `main.py` (and Anwesha's service) use FastAPI. Both
-  can run as separate processes so this isn't blocking, but it means there's
-  no single `docker-compose` entrypoint yet — someone needs to decide how
-  these get deployed together.
-- **`evidence_upload/routes.py` and `report_generator/routes.py` haven't
-  been shared yet** — only `storage.py`, `format_spec.py`, and
-  `report_builder.py` have. `api/evidence.js` and `api/report.js` are
-  wired to the schema those files imply, but the actual endpoint paths in
-  `routes.py` still need confirming when Tanya sends them.
+Database tables are created automatically on startup. First run downloads
+YOLOv8 and EasyOCR model weights — needs outbound internet once.
 
-## Structure
+### 5. Verify it's alive
+
+```bash
+curl http://127.0.0.1:8000/
+# {"message":"CSIA Backend is running!"}
+```
+
+## API Reference
+
+Base URL: `http://127.0.0.1:8000/api/v1`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/cases` | Create a case |
+| `GET` | `/cases` | List cases (paginated) |
+| `GET` | `/cases/{case_id}` | Get one case with its evidence |
+| `PUT` | `/cases/{case_id}` | Update a case |
+| `DELETE` | `/cases/{case_id}` | Delete a case |
+| `POST` | `/cases/{case_id}/evidence` | Attach evidence directly |
+| `POST` | `/cases/{case_id}/evidence/upload` | Upload a file as evidence |
+| `POST` | `/cases/{case_id}/evidence/image` | Upload + run YOLOv8/EasyOCR, store result |
+| `GET` | `/cases/{case_id}/timeline` | Chronological timeline + next-step suggestions |
+| `GET` | `/cases/{case_id}/report` | Generate a PDF case report |
+| `GET` | `/evidence/{evidence_id}` | Get one evidence item |
+| `GET` | `/search/cases` | Search/filter cases |
+| `GET` | `/search/evidence` | Search/filter evidence |
+
+**Evidence fields:** `id`, `case_id`, `evidence_type`, `description`, `source`, `file_url`, `collected_by`, `collected_at`, `extra_metadata`, `chain_of_custody`.
+**`evidence_type` values:** `image`, `video`, `document`, `witness_statement`, `cctv_frame`, `physical`, `other`.
+
+## Testing
+
+```bash
+cd backend
+python -m pytest tests/ -v
+```
+
+`test_timeline_suggestions.py` covers both a clean case (based on a real
+sample case) and a messy case: a low-detail photo, two contradictory
+witness statements, and one piece of evidence with no timestamp.
+
+## Team & Responsibilities
+
+| Member | Reg. No. | Track |
+|---|---|---|
+| **Sanskruti Prashant Chanekar** (Team Lead) | 25BAI10603 | Timeline Generator + Next-Step Suggestions |
+| Yojit Wagh | 25BAI10232 | Case Management + Search Dashboard |
+| Anwesha Dhote | 25BAI10996 | Image Analysis (YOLOv8) + OCR (EasyOCR) |
+| Anmol Panjwani | 25BAI10354 | NLP Engine + Relationship Graph |
+| Tanya Kakkar | 25BAI11581 | Evidence Upload + Report Generator |
+| Saumya Sinha | 25BAI11388 | Frontend (React + Tailwind) |
+
+## Limitations & Disclaimer
+
+CSIA is an educational prototype intended for university demonstrations,
+forensic education, police training, and mock investigations — **not for
+live criminal investigations or real evidentiary casework.**
+
+- AI detections, summaries, and suggestions may be incorrect and must not
+  be treated as definitive evidence.
+- Timeline ordering reflects when evidence was *collected*, not
+  necessarily when the underlying incident occurred.
+- Requires labeled training data, secure storage, and chain-of-custody
+  controls beyond this prototype's scope for any real-world use.
+
+## Academic Information
+
+| | |
+|---|---|
+| University | VIT Bhopal University |
+| Course | Project Exhibition 1 |
+| Course Code | DSN 2098 |
+| Branch | AI & ML | 
+
+
+
