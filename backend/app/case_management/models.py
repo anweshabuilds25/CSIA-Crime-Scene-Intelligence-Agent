@@ -26,6 +26,7 @@ from .database import Base
 class CaseStatus(str, enum.Enum):
     open = "open"
     under_investigation = "under_investigation"
+    cold = "cold"
     closed = "closed"
     archived = "archived"
 
