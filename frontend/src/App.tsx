@@ -119,7 +119,7 @@ export default function App() {
   const totalCasesCount = cases.length;
   const openCasesCount = cases.filter((c) => c.status === 'open').length;
   const highPriorityCount = cases.filter((c) => c.priority === 'high' || c.priority === 'critical').length;
-  const totalEvidenceCount = cases.reduce((acc, c) => acc + (c.evidence_items?.length || 0), 0);
+ const totalEvidenceCount = cases.reduce((acc, c) => acc + (c.evidence_count ?? c.evidence_items?.length ?? 0), 0);
 
   if (loading && cases.length === 0) {
     return (

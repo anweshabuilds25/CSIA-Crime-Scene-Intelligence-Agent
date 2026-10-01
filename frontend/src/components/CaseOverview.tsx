@@ -348,7 +348,7 @@ export const CaseOverview: React.FC<CaseOverviewProps> = ({
             <div>
               <span className="text-text-faint uppercase text-[10px] block">Last Updated</span>
               <div className="text-text-muted mt-0.5">
-                {new Date(currentCase.updated_at).toLocaleString()}
+                {new Date(currentCase.updated_at || currentCase.created_at).toLocaleString()}
               </div>
             </div>
           </div>

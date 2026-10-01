@@ -197,7 +197,7 @@ export const CaseList: React.FC<CaseListProps> = ({
                     <span className="truncate max-w-[100px]">{c.location}</span>
                   </div>
                   <div>
-                    <span className="text-text-primary font-medium">{c.evidence_items.length}</span>{' '}
+                    <span className="text-text-primary font-medium">{c.evidence_count ?? c.evidence_items?.length ?? 0}</span>{' '}
                     evidence
                   </div>
                 </div>
