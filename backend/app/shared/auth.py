@@ -93,25 +93,19 @@ def decode_access_token(token: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
 ) -> dict:
-    """
-    Extract and validate the logged-in user from the Authorization header.
+    if AUTH_DISABLED:
+        return {"id": "demo", "role": "investigator"}
 
-    Expected header:
-        Authorization: Bearer <JWT token>
-    """
-    token = credentials.credentials
+    if credentials is None:
+        raise AuthenticationError("Missing Authorization header.")
 
-    payload = decode_access_token(token)
-
-    user_id: str = payload.get("sub")
-    role: str = payload.get("role", "investigator")
-
+    payload = decode_access_token(credentials.credentials)
+    user_id = payload.get("sub")
     if user_id is None:
         raise AuthenticationError("Invalid token: missing user identity.")
-
-    return {"id": user_id, "role": role}
+    return {"id": user_id, "role": payload.get("role", "investigator")}
 
 
 def require_role(*allowed_roles: str):
