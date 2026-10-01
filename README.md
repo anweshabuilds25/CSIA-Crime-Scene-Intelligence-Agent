@@ -29,6 +29,14 @@ CSIA provides a unified platform where investigators or students working on mock
 * Review AI-generated outputs before taking any action
 
 CSIA is an **educational prototype** and is not intended for live criminal investigations or autonomous decision-making.
+---
+
+## 🔗 Live Demo
+
+**Frontend:** https://csia-crime-scene-intelligence-agent.vercel.app/
+
+> The frontend is hosted on Vercel. The backend (FastAPI + YOLOv8 + EasyOCR + spaCy) runs separately and is exposed through a temporary tunnel for demonstrations, so live data is only available while the backend is running.
+
 
 ---
 
