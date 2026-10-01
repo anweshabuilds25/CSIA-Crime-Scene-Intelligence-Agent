@@ -41,7 +41,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Points FastAPI's docs/Swagger UI at the login endpoint that issues tokens.
 # Update the path if case_management/routes.py exposes login somewhere else.
-bearer_scheme = HTTPBearer()
+bearer_scheme = HTTPBearer(auto_error=False)
+AUTH_DISABLED = os.getenv("CSIA_AUTH_DISABLED", "1") == "1"
 
 # ---------------------------------------------------------------------------
 # Password hashing
